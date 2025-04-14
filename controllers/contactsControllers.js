@@ -1,11 +1,71 @@
-import contactsService from "../services/contactsServices.js";
+import * as contactsService from '../services/contactsServices.js';
 
-export const getAllContacts = (req, res) => {};
+import HttpError from '../helpers/HttpError.js';
 
-export const getOneContact = (req, res) => {};
+export const getAllContacts = async (req, res, next) => {
+  try {
+    const contacts = await contactService.listContacts();
+    res.status(200).json(contacts);
+  }
+  catch (err) {
+    next(err);
+  }
+};
 
-export const deleteContact = (req, res) => {};
+export const getOneContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const contact = await contactsService.getContactById(id);
+    if (!contact) {
+      throw HttpError(404, 'Not found');
+    }
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export const createContact = (req, res) => {};
+export const deleteContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const contact = await contactsService.removeContact(id);
+    if (!contact) {
+      throw HttpError(404, 'Not found');
+    }
+    res.status(200).json(contact);
+  } catch (error) {
+    next(error);
+  }
+};
 
-export const updateContact = (req, res) => {};
+export const createContact = async (req, res, next) => {
+  try {
+    const { name, email, phone } = req.body;
+    const newContact = await contactsService.addContact({ name, email, phone });
+    res.status(201).json(newContact);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateContact = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    if (Object.keys(updatedData).length === 0) {
+      throw HttpError(400, 'Body must have at least one field');
+    }
+
+    const updatedContact = await contactsService.updateContact(id, updatedData);
+
+    if (!updatedContact) {
+      throw HttpError(404, 'Not found');
+    }
+
+    res.status(200).json(updatedContact);
+  } catch (error) {
+    next(error);
+  }
+};
+
