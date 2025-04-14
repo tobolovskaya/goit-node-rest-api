@@ -14,6 +14,7 @@ Install the dependencies:
 npm i
 ```
 
+
 ## Step 2
 
 In the `contactsServices.js` file (located in the `services` folder), copy the functions from the `contacts.js` file created in Module 1's homework.
