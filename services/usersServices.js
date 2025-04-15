@@ -47,6 +47,17 @@ export async function findUserById(id) {
     return await User.findOne({ where: { id } });
 }
 
+export async function updateAvatar(id, avatarURL) {
+    const user = await findUserById(id);
+    if (!user) {
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
+    }
+    user.avatarURL = avatarURL;
+    return await user.save();
+}
+
 const hashPassword = async (password) => {
     return await bcrypt.hash(password, bcrypt.genSaltSync(10));
 }
