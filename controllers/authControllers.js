@@ -1,4 +1,8 @@
 import * as userService from "../services/usersServices.js";
+import fs from "fs/promises";
+import path from "node:path";
+
+const avatarsDir = path.resolve("public", "avatars");
 
 export const register = async (req, res, next) => {
     try {
@@ -67,4 +71,45 @@ export const current = async (req, res, next) => {
         console.log(err);
         next(err);
     }
+}
+
+export const updateAvatar = async (req, res, next) => {
+    const { path: tempPath, originalname } = req.file;
+    const user = req.user;
+
+
+    if (!user || !user.id) {
+        const error = new Error("Unauthorized");
+        error.status = 401;
+        throw error;
+    }
+
+    const newFileName = `${Date.now()}_${user.id}_${originalname}`;
+    const newFilePath = path.join(avatarsDir, newFileName);
+
+    try {
+        
+        const { path: tempPath, originalname } = req.file;
+        const newFileName = `${Date.now()}_${user.id}_${originalname}`;
+        const newFilePath = path.join(avatarsDir, newFileName);
+
+        await fs.copyFile(tempPath, newFilePath);
+        const avatarURL = `/avatars/${newFileName}`;
+        const updatedUser = await userService.updateAvatar(user.id, avatarURL);
+
+        res.status(200).json({
+            avatarURL: updatedUser.avatarURL
+        });
+    }
+    catch (err) {
+        console.log(err);
+        next(err);
+    }
+    finally {
+        try {
+            await fs.unlink(tempPath);
+        } catch (unlinkErr) {
+            console.log(`Failed to remove temporary file: ${unlinkErr.message}`);
+        }
+    }     
 }
