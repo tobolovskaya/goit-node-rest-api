@@ -20,6 +20,10 @@ const User = dbConnection.define("User", {
         type: DataTypes.STRING,
         defaultValue: null,
     },
+    avatarURL: {
+        type: DataTypes.STRING,
+        defaultValue: null,
+    },
 }, {
     defaultScope: {
         attributes: { exclude: ['password'] },
