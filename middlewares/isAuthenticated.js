@@ -18,6 +18,9 @@ const isAuthenticated = async (req, res, next) => {
         if (!user || user.token !== token) {
             return next(HttpError(401, "Not authorized"));
         }
+        if (!user.verify) {
+            return next(HttpError(401, "Please verify your email"));
+        }
         req.user = user;
     } catch (err) {
         console.log(err);
