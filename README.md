@@ -1,4 +1,4 @@
-# Node.js REST API - Homework 5
+# Node.js REST API - Homework 6
 
 This project is a simple Node.js REST API application designed for managing contacts. It provides functionalities for creating, reading, updating, and deleting contact entries, along with user authentication.
 
@@ -125,6 +125,42 @@ The response will include the new avatar URL:
 ```json
 {
   "avatarURL": "/avatars/your_avatar_filename"
+}
+```
+### Verify User Email
+
+To verify the user's email, use the `/api/auth/verify/:verificationToken`
+endpoint with a `GET` request. The request should include the verification token
+in the URL.
+
+```sh
+curl -X GET http://localhost:3000/api/auth/verify/your_verification_token
+```
+
+The response will include a success message:
+
+```json
+{
+  "message": "Verification successful"
+}
+```
+
+### Resend Verification Email
+
+To resend the verification email, use the `/api/auth/verify` endpoint with a
+`POST` request. The request should include the user's email in the request body.
+
+```sh
+curl -X POST http://localhost:3000/api/auth/verify -H "Content-Type: application/json" -d '{
+  "email": "user@example.com"
+}'
+```
+
+The response will include a success message:
+
+```json
+{
+  "message": "Verification email sent"
 }
 ```
 

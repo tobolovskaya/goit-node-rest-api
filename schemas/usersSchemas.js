@@ -14,3 +14,7 @@ export const updateUserSchema = Joi.object({
     email: Joi.string().min(1).max(255),
     password: Joi.string().min(1).max(255),
 }).min(1);
+
+export const resendVerificationSchema = Joi.object({
+    email: Joi.string().min(1).max(255).required(),
+})

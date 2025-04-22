@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
+import { nanoid } from 'nanoid';
 
 import User from '../db/models/users.js';
 
@@ -13,8 +14,9 @@ export async function register(data) {
         throw error;
     }
     const hashedPassword = await hashPassword(password);
+    const verificationToken = nanoid();
     const avatarURL = gravatar.url(email, { protocol: 'https', s: '200' });
-    await User.create({ email, password: hashedPassword, avatarURL: avatarURL });
+    await User.create({ email, password: hashedPassword, avatarURL: avatarURL, verificationToken });
     return await User.findOne({ where: { email } });
 };
 
@@ -23,6 +25,11 @@ export async function login(data) {
     const user = await User.scope('withPassword').findOne({ where: { email: email } });
     if (!user || !(await bcrypt.compare(password, user.password))) {
         const error = new Error("Email or password is wrong");
+        error.status = 401;
+        throw error;
+    }
+    if (!user.verify) {
+        const error = new Error("Please verify your email");
         error.status = 401;
         throw error;
     }
@@ -47,6 +54,10 @@ export async function findUserById(id) {
     return await User.findOne({ where: { id } });
 }
 
+export async function findUserByEmail(email) {
+    return await User.findOne({ where: { email } });
+}
+
 export async function updateAvatar(id, avatarURL) {
     const user = await findUserById(id);
     if (!user) {
@@ -60,4 +71,28 @@ export async function updateAvatar(id, avatarURL) {
 
 const hashPassword = async (password) => {
     return await bcrypt.hash(password, bcrypt.genSaltSync(10));
+}
+export const verifyUser = async (verificationToken) => {
+    const user = await User.findOne({ where: { verificationToken } });
+    if (user) {
+        user.verificationToken = null;
+        user.verify = true;
+        await user.save();
+    }
+    return user;
+};
+
+export const getOrCreateVerificationToken = async (user) => {
+    if (!user) {
+        const error = new Error("User not found");
+        error.status = 404;
+        throw error;
+    }
+    if (!user.verificationToken) {
+        const verificationToken = nanoid();
+        user.verificationToken = verificationToken;
+        await user.save();
+        return verificationToken;
+    }
+    return user.verificationToken;
 }

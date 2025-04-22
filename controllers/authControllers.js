@@ -1,4 +1,5 @@
 import * as userService from "../services/usersServices.js";
+import sendEmail from "../services/emailService.js";
 import fs from "fs/promises";
 import path from "node:path";
 
@@ -7,6 +8,7 @@ const avatarsDir = path.resolve("public", "avatars");
 export const register = async (req, res, next) => {
     try {
         const newUser = await userService.register(req.body);
+        await sendVerificationEmail(req, newUser.email, newUser.verificationToken);
         res.status(201).json({
             "user": {
                 "email": newUser.email,
@@ -112,4 +114,61 @@ export const updateAvatar = async (req, res, next) => {
             console.log(`Failed to remove temporary file: ${unlinkErr.message}`);
         }
     }     
+}
+
+export const verifyUser = async (req, res, next) => {
+    try {
+        const { verificationToken } = req.params;
+        const user = await userService.verifyUser(verificationToken);
+
+        if (!user) {
+            const error = new Error("User not found");
+            error.status = 404;
+            throw error;
+        }
+        res.status(200).json({ message: "Verification successful" });
+    } catch (err) {
+        console.log(err);
+        next(err);
+    }
+};
+
+export const resendVerificationEmail = async (req, res, next) => {
+    try {
+        const userEmail = req.body.email;
+        const user = await userService.findUserByEmail(userEmail);
+        if (!user) {
+            const error = new Error("User not found");
+            error.status = 404;
+            throw error;
+        }
+        if (user.verify) {
+            const error = new Error("Verification has already been passed");
+            error.status = 400;
+            throw error;
+        }
+        const verificationToken = await userService.getOrCreateVerificationToken(user);
+        await sendVerificationEmail(req, userEmail, verificationToken);
+        res.status(200).json({ message: "Verification email sent" });
+    } catch (err) {
+        console.log(err);
+        next(err);
+    }
+}
+
+async function sendVerificationEmail(req, email, verificationToken) {
+    try {
+        const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify/${verificationToken}`;
+        await sendEmail({
+            to: email,
+            subject: "Verification email",
+            text: `Please verify your email: ${verificationUrl}`,
+            html: `<p>Please verify your email <a href="${verificationUrl}" target="_blank">${verificationUrl}</a></p>`,
+        });
+    }
+    catch (err) {
+        console.log("Error sending verification email: %s", err);
+        throw err;
+    }
+
 }
