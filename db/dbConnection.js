@@ -7,7 +7,10 @@ const dbConnection = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
     port: DB_PORT,
     dialect: 'postgres',
     dialectOptions: {
-        ssl: false
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
     }
 });
 
