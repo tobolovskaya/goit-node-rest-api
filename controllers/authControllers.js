@@ -8,13 +8,12 @@ export const register = async (req, res, next) => {
     try {
         const newUser = await userService.register(req.body);
         res.status(201).json({
-            "user": {
-                "email": newUser.email,
-                "subscription": newUser.subscription,
+            user: {
+                email: newUser.email,
+                subscription: newUser.subscription,
             }
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
     }
@@ -30,8 +29,7 @@ export const login = async (req, res, next) => {
                 subscription: signedUser.subscription
             },
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
     }
@@ -47,12 +45,11 @@ export const logout = async (req, res, next) => {
         }
         await userService.logout(user.id);
         res.status(204).json();
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
     }
-}
+};
 
 export const current = async (req, res, next) => {
     try {
@@ -66,17 +63,15 @@ export const current = async (req, res, next) => {
             email: user.email,
             subscription: user.subscription
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
     }
-}
+};
 
 export const updateAvatar = async (req, res, next) => {
     const { path: tempPath, originalname } = req.file;
     const user = req.user;
-
 
     if (!user || !user.id) {
         const error = new Error("Unauthorized");
@@ -88,11 +83,6 @@ export const updateAvatar = async (req, res, next) => {
     const newFilePath = path.join(avatarsDir, newFileName);
 
     try {
-        
-        const { path: tempPath, originalname } = req.file;
-        const newFileName = `${Date.now()}_${user.id}_${originalname}`;
-        const newFilePath = path.join(avatarsDir, newFileName);
-
         await fs.copyFile(tempPath, newFilePath);
         const avatarURL = `/avatars/${newFileName}`;
         const updatedUser = await userService.updateAvatar(user.id, avatarURL);
@@ -100,16 +90,14 @@ export const updateAvatar = async (req, res, next) => {
         res.status(200).json({
             avatarURL: updatedUser.avatarURL
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
-    }
-    finally {
+    } finally {
         try {
             await fs.unlink(tempPath);
         } catch (unlinkErr) {
             console.log(`Failed to remove temporary file: ${unlinkErr.message}`);
         }
-    }     
-}
+    }
+};
