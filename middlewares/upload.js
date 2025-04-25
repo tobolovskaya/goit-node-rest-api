@@ -4,33 +4,33 @@ import { nanoid } from 'nanoid';
 
 const tempPath = path.resolve("temp");
 
-const tempStorage = multer.diskStorage({
+const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, tempPath);
+      cb(null, tempPath);
     },
     filename: (req, file, cb) => {
-        nanoid()
-        const tmpName = nanoid();
-        cb(null, tmpName);
+      const ext = path.extname(file.originalname);
+      const base = path.basename(file.originalname, ext);
+      cb(null, `${base}-${Date.now()}${ext}`);
     },
-});
-
-const limits = {
-    fileSize: 1024 * 1024 * 10 // 10MB
-};
-
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.includes("image")) {
-        cb(null, true);
-        return;
+  });
+  
+  const limits = {
+    fileSize: 1024 * 1024 * 5, // 5MB
+  };
+  
+  const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"), false);
     }
-    cb(null, false);
-}
-
-const upload = multer({
-    storage: tempStorage,
+  };
+  
+  const upload = multer({
+    storage,
     limits,
     fileFilter,
-});
-
-export default upload;
+  });
+  
+  export default upload;

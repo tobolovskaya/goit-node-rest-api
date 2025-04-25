@@ -77,39 +77,26 @@ export const updateAvatar = async (req, res, next) => {
     const { path: tempPath, originalname } = req.file;
     const user = req.user;
 
-
     if (!user || !user.id) {
         const error = new Error("Unauthorized");
         error.status = 401;
-        throw error;
+        return next(error);
     }
 
     const newFileName = `${Date.now()}_${user.id}_${originalname}`;
     const newFilePath = path.join(avatarsDir, newFileName);
+    const avatarURL = `/avatars/${newFileName}`;
 
     try {
-        
-        const { path: tempPath, originalname } = req.file;
-        const newFileName = `${Date.now()}_${user.id}_${originalname}`;
-        const newFilePath = path.join(avatarsDir, newFileName);
+        await fs.rename(tempPath, newFilePath); 
 
-        await fs.copyFile(tempPath, newFilePath);
-        const avatarURL = `/avatars/${newFileName}`;
         const updatedUser = await userService.updateAvatar(user.id, avatarURL);
 
         res.status(200).json({
             avatarURL: updatedUser.avatarURL
         });
-    }
-    catch (err) {
+    } catch (err) {
         console.log(err);
         next(err);
     }
-    finally {
-        try {
-            await fs.unlink(tempPath);
-        } catch (unlinkErr) {
-            console.log(`Failed to remove temporary file: ${unlinkErr.message}`);
-        }
-    }     
 }
