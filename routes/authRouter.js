@@ -5,6 +5,7 @@ import {
   logout,
   current,
   updateAvatar,
+  resendVerificationEmail,
 } from "../controllers/authControllers.js";
 
 import isAuthenticated from "../middlewares/isAuthenticated.js";
@@ -14,6 +15,8 @@ import validateBody from "../helpers/validateBody.js";
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import isFilePresent from "../middlewares/isFilePresent.js";
 import upload from "../middlewares/upload.js";
+import { verifyUser } from "../controllers/authControllers.js";
+
 
 const authRouter = express.Router();
 
